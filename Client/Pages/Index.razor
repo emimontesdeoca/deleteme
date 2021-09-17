@@ -1,9 +1,10 @@
 ﻿@using BlazorApp.Shared
 @inject HttpClient Http
+@inject IJSRuntime IJSRuntime
 @page "/"
 
 
-<div class="container text-center app-container mt-4" >
+<div class="container text-center app-container mt-4">
 
 	<h2>
 		📝
@@ -72,15 +73,24 @@
 
 	public async Task OnAdd()
 	{
-		var newTodoItem = new TodoItem()
-			{
-				Id = Guid.NewGuid(),
-				Done = false,
-				Message = InputValue
-			};
+		if (string.IsNullOrEmpty(InputValue))
+		{
+			await IJSRuntime.InvokeVoidAsync("showAlert", "Please provide a message 😢");
+		}
+		else
+		{
+			var newTodoItem = new TodoItem()
+				{
+					Id = Guid.NewGuid(),
+					Done = false,
+					Message = InputValue
+				};
 
-		await Http.PostAsJsonAsync($"api/todo", newTodoItem);
-		await LoadData();
+			await Http.PostAsJsonAsync($"api/todo", newTodoItem);
+			await LoadData();
+		}
+
+		InputValue = string.Empty;
 	}
 
 	protected override async Task OnInitializedAsync()
