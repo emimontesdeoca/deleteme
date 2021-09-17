@@ -2,23 +2,92 @@
 @inject HttpClient Http
 @page "/"
 
-<h1>Hello, NET Conf España!</h1>
 
-@foreach (var item in todoItems)
-{
-	<p>@item.Message</p>
-}
+<div class="container text-center app-container mt-4" >
+
+	<h2>
+		📝
+	</h2>
+	<h4 class="display-6 mt-2"> NETConf 2021 Todo list! </h4>
 
 
+	<div class="row input-row mt-3">
+		<div class="col-10">
+			<input @bind-value="InputValue" type="text" class="form-control form-control-sm" id="input" placeholder="Build something amazing...">
+		</div>
+		<div class="col-2">
+			<button type="submit" @onclick="() => OnAdd()" class="btn btn-outline-light btn-sm">Add</button>
+		</div>
+	</div>
+
+	<hr class="mt-3 mb-2 hr-item" />
+
+	@foreach (var item in todoItems)
+	{
+		<div class="row input-row mt-2">
+			<div class="col-9 message">
+				@if (item.Done)
+				{
+					<s>@item.Message</s>
+				}
+				else
+				{
+					@item.Message
+				}
+			</div>
+			<div class="col-2">
+				<div class="btn-group" role="group">
+					<button type="button" @onclick="() => OnCheckboxUpdate(item.Id)" class="btn btn-sm btn-remove">@GetCheckValue(item.Done)</button>
+					<button type="button" @onclick="() => OnDelete(item.Id)" class="btn btn-sm btn-remove">🗑️</button>
+				</div>
+			</div>
+		</div>
+	}
+</div>
 
 @code {
-	private List<TodoItem> todoItems = new List<TodoItem>();
+	public List<TodoItem> todoItems { get; set; } = new List<TodoItem>();
+	public string InputValue { get; set; }
+	public string GetCheckValue(bool value) => value ? "❌" : "✔️";
+
+	public async Task LoadData()
+	{
+		todoItems = await Http.GetFromJsonAsync<List<TodoItem>>("/api/todo");
+	}
+
+	public async Task OnCheckboxUpdate(Guid id)
+	{
+		var item = todoItems.Single(x => x.Id == id);
+		item.Done = !item.Done;
+
+		await Http.PutAsJsonAsync("api/todo", item);
+		await LoadData();
+	}
+
+	public async Task OnDelete(Guid id)
+	{
+		await Http.DeleteAsync($"api/todo/{id.ToString()}");
+		await LoadData();
+	}
+
+	public async Task OnAdd()
+	{
+		var newTodoItem = new TodoItem()
+			{
+				Id = Guid.NewGuid(),
+				Done = false,
+				Message = InputValue
+			};
+
+		await Http.PostAsJsonAsync($"api/todo", newTodoItem);
+		await LoadData();
+	}
 
 	protected override async Task OnInitializedAsync()
 	{
 		try
 		{
-			todoItems = await Http.GetFromJsonAsync<List<TodoItem>>("/api/todo");
+			await LoadData();
 		}
 		catch (Exception ex)
 		{

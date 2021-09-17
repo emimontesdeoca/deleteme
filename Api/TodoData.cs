@@ -28,14 +28,12 @@ namespace BlazorApp.Api
                     Id = Guid.NewGuid(),
                     Done = true,
                     Message = "Look at Emi's presentation!",
-                    Priority = 0,
                 },
             new TodoItem()
                 {
                     Id = Guid.NewGuid(),
                     Done = true,
                     Message = "Follow on Github!",
-                    Priority = 0,
                 }
         };
 
