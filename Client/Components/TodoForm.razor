@@ -1,0 +1,31 @@
+﻿@inject IJSRuntime IJSRuntime
+
+<div class="row input-row mt-3">
+	<div class="col-10">
+		<input @bind-value="@InputValue" type="text" class="form-control form-control-sm" id="input" placeholder="Build something amazing...">
+	</div>
+	<div class="col-2">
+		<button type="submit" @onclick="Add" class="btn btn-outline-light btn-sm">Add</button>
+	</div>
+</div>
+
+@code {
+	public string InputValue { get; set; }
+
+	[Parameter]
+	public EventCallback<string> OnAddCallback { get; set; }
+
+
+	private async Task Add()
+    {
+		if (string.IsNullOrEmpty(InputValue))
+		{
+			await IJSRuntime.InvokeVoidAsync("showAlert", "Please provide a message 😢");
+		}
+		else
+		{
+			await OnAddCallback.InvokeAsync(InputValue);
+			InputValue = string.Empty;
+		}
+	}
+}

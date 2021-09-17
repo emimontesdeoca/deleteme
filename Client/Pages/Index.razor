@@ -1,6 +1,5 @@
 ﻿@using BlazorApp.Shared
 @inject HttpClient Http
-@inject IJSRuntime IJSRuntime
 @page "/"
 
 
@@ -11,52 +10,22 @@
 	</h2>
 	<h4 class="display-6 mt-2"> NETConf 2021 Todo list! </h4>
 
-
-	<div class="row input-row mt-3">
-		<div class="col-10">
-			<input @bind-value="InputValue" type="text" class="form-control form-control-sm" id="input" placeholder="Build something amazing...">
-		</div>
-		<div class="col-2">
-			<button type="submit" @onclick="() => OnAdd()" class="btn btn-outline-light btn-sm">Add</button>
-		</div>
-	</div>
+	<BlazorApp.Client.Components.TodoForm OnAddCallback="OnAdd" />
 
 	<hr class="mt-3 mb-2 hr-item" />
 
-	@foreach (var item in todoItems)
-	{
-		<div class="row input-row mt-2">
-			<div class="col-9 message">
-				@if (item.Done)
-				{
-					<s>@item.Message</s>
-				}
-				else
-				{
-					@item.Message
-				}
-			</div>
-			<div class="col-2">
-				<div class="btn-group" role="group">
-					<button type="button" @onclick="() => OnCheckboxUpdate(item.Id)" class="btn btn-sm btn-remove">@GetCheckValue(item.Done)</button>
-					<button type="button" @onclick="() => OnDelete(item.Id)" class="btn btn-sm btn-remove">🗑️</button>
-				</div>
-			</div>
-		</div>
-	}
+	<BlazorApp.Client.Components.TodoItem TodoItems="todoItems" OnDelete=OnDelete OnUpdate=OnUpdate />
 </div>
 
 @code {
-	public List<TodoItem> todoItems { get; set; } = new List<TodoItem>();
-	public string InputValue { get; set; }
-	public string GetCheckValue(bool value) => value ? "❌" : "✔️";
+	public List<TodoItem> todoItems { get; set; }
 
 	public async Task LoadData()
 	{
 		todoItems = await Http.GetFromJsonAsync<List<TodoItem>>("/api/todo");
 	}
 
-	public async Task OnCheckboxUpdate(Guid id)
+	public async Task OnUpdate(Guid id)
 	{
 		var item = todoItems.Single(x => x.Id == id);
 		item.Done = !item.Done;
@@ -71,26 +40,17 @@
 		await LoadData();
 	}
 
-	public async Task OnAdd()
+	public async Task OnAdd(string value)
 	{
-		if (string.IsNullOrEmpty(InputValue))
-		{
-			await IJSRuntime.InvokeVoidAsync("showAlert", "Please provide a message 😢");
-		}
-		else
-		{
-			var newTodoItem = new TodoItem()
-				{
-					Id = Guid.NewGuid(),
-					Done = false,
-					Message = InputValue
-				};
+		var newTodoItem = new TodoItem()
+			{
+				Id = Guid.NewGuid(),
+				Done = false,
+				Message = value
+			};
 
-			await Http.PostAsJsonAsync($"api/todo", newTodoItem);
-			await LoadData();
-		}
-
-		InputValue = string.Empty;
+		await Http.PostAsJsonAsync($"api/todo", newTodoItem);
+		await LoadData();
 	}
 
 	protected override async Task OnInitializedAsync()

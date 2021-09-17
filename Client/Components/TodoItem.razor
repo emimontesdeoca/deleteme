@@ -1,0 +1,54 @@
+﻿@using BlazorApp.Shared	
+
+@if (TodoItems == null || TodoItems.Count == 0)
+{
+	<p>Nothing on the todo list, good work 👌</p>
+}
+else
+{
+@foreach (var item in TodoItems)
+	{
+		<div class="row input-row mt-2">
+			<div class="col-9 message">
+				@if (item.Done)
+				{
+					<s>@item.Message</s>
+				}
+				else
+				{
+					@item.Message
+				}
+			</div>
+			<div class="col-2">
+				<div class="btn-group btn-group-app" role="group">
+					<button type="button" @onclick="() => Update(item.Id)" class="btn btn-sm btn-remove">@GetCheckValue(item.Done)</button>
+					<button type="button" @onclick="() => Delete(item.Id)" class="btn btn-sm btn-remove">🗑️</button>
+				</div>
+			</div>
+		</div>
+	}
+
+}
+
+@code {
+	[Parameter]
+	public List<BlazorApp.Shared.TodoItem> TodoItems { get; set; }
+
+	[Parameter]
+	public EventCallback<Guid> OnDelete { get; set; }
+
+	[Parameter]
+	public EventCallback<Guid> OnUpdate { get; set; }
+
+	private async Task Delete(Guid id)
+	{
+		await OnDelete.InvokeAsync(id);
+	}
+
+	private async Task Update(Guid id)
+	{
+		await OnUpdate.InvokeAsync(id);
+	}
+
+	private string GetCheckValue(bool value) => value ? "❌" : "✔️";
+}
